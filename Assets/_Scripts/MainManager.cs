@@ -50,6 +50,10 @@ public class MainManager : MonoBehaviour
         float maxB = float.MinValue;
         float maxC = float.MinValue;
         float maxD = float.MinValue;
+        bool lockA = InputA.Locked;
+        bool lockB = InputB.Locked;
+        bool lockC = InputC.Locked;
+        bool lockD = InputD.Locked;
         _solutions.Clear();
 
         int solutions = 0;
@@ -57,8 +61,12 @@ public class MainManager : MonoBehaviour
         while (solutions < LIMIT)
         {
             A += DELTA;
+            if (lockA) { A = Mathf.Round(InputA.CurrentValue / DELTA) * DELTA; }
             // check rules for max A
             if (2f * A >= T || 2f * A * M >= T) { break; }
+            if (lockB && A > InputB.CurrentValue) { break; }
+            if (lockC && A > InputC.CurrentValue) { break; }
+            if (lockD && A > InputD.CurrentValue) { break; }
 
             float localMinB = -1f;
             float localMaxB = float.MinValue;
@@ -66,8 +74,11 @@ public class MainManager : MonoBehaviour
             while (true)
             {
                 B += DELTA;
+                if (lockB) { B = Mathf.Round(InputB.CurrentValue / DELTA) * DELTA; }
                 // check rules for max B
                 if (2f * B >= T || A + B >= T || (A + B) * M >= T) { break; }
+                if (lockC && B > InputC.CurrentValue) { break; }
+                if (lockD && B > InputD.CurrentValue) { break; }
 
                 float localMinC = -1f;
                 float localMaxC = float.MinValue;
@@ -75,8 +86,10 @@ public class MainManager : MonoBehaviour
                 while (true)
                 {
                     C += DELTA;
+                    if (lockC) { C = Mathf.Round(InputC.CurrentValue/DELTA) * DELTA; }
                     // check rules for max C
                     if (A + C >= T || (A + C) * M >= T) { break; }
+                    if (lockD && C > InputD.CurrentValue) { break; }
 
                     // check rules for min C
                     if (2f * C < T) { continue; }
@@ -87,6 +100,7 @@ public class MainManager : MonoBehaviour
                     while(true)
                     {
                         D += DELTA;
+                        if (lockD) { D = Mathf.Round(InputD.CurrentValue / DELTA) * DELTA; }
                         // check rules for max D
                         if ((A + D) * M >= T) { break; }
 
@@ -115,15 +129,23 @@ public class MainManager : MonoBehaviour
 
 
                         solutions++;
+
+                        if (lockD) { break; }
                     }
                     if (localMinD >= 0f && localMinD < minD) {  minD = localMinD; }
                     if (localMaxD > maxD) {  maxD = localMaxD; }
+
+                    if (lockC) { break; }
                 }
                 if (localMinC >= 0f && localMinC < minC) { minC = localMinC; }
                 if (localMaxC > maxC) { maxC = localMaxC; }
+
+                if (lockB) { break; }
             }
             if (localMinB >= 0f && localMinB < minB) { minB = localMinB; }
             if (localMaxB > maxB) { maxB = localMaxB; }
+
+            if (lockA) { break; }
         }
 
         if (_solutions.Count > 0)
@@ -138,12 +160,14 @@ public class MainManager : MonoBehaviour
             InputC.SetSolutionBounds(minC, maxC);
             InputD.SetSolutionBounds(minD, maxD);
             Debug.Log($"A: {minA}-{maxA}  B: {minB}-{maxB}  C: {minC}-{maxC}  D: {minD}-{maxD}");
+
+            ShowAverageSolution();
         }
 
         _solutionDisplay.text = $"{solutions} solution(s) found!";
     }
 
-    public void ShowRandomACSolution ()
+    public void ShowRandomSolution ()
     {
         if (_solutions.Count == 0) return;
         ABCDSolution sol = _solutions[Random.Range(0, _solutions.Count)];
@@ -153,7 +177,7 @@ public class MainManager : MonoBehaviour
         InputD.SetValue(sol.D);
     }
 
-    public void ShowAverageACSolution ()
+    public void ShowAverageSolution ()
     {
         if (_solutions.Count == 0) return;
         InputA.SetValue(_avgSolution.A);

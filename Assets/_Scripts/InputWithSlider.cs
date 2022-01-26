@@ -11,11 +11,16 @@ public class InputWithSlider : MonoBehaviour
     [SerializeField] private Slider _slider = null;
     [SerializeField] private Slider _minSlider = null;
     [SerializeField] private Slider _maxSlider = null;
+    [SerializeField] private Button _lockButton = null;
+    [SerializeField] private Image _lockImage = null;
+    [SerializeField] private Sprite _lockSprite = null;
+    [SerializeField] private Sprite _unlockSprite = null;
     [SerializeField] private float _minValue = 0f;
     [SerializeField] private float _maxValue = 0f;
 
     [field:SerializeField]
     public float CurrentValue { get; private set; }
+    public bool Locked { get; private set; }
     private float _minSolution = 0f;
     private float _maxSolution = 0f;
 
@@ -24,6 +29,7 @@ public class InputWithSlider : MonoBehaviour
         _inputField.onSubmit.AddListener(OnInputValueChanged);
         _inputField.onDeselect.AddListener(OnInputValueChanged);
         _slider.onValueChanged.AddListener(OnValueChanged);
+        _lockButton.onClick.AddListener(OnLockButtonClicked);
         SetValue(CurrentValue);
         _slider.minValue = _minValue;
         _slider.maxValue = _maxValue;
@@ -31,6 +37,7 @@ public class InputWithSlider : MonoBehaviour
         _minSlider.maxValue = _maxValue;
         _maxSlider.minValue = _minValue;
         _maxSlider.maxValue = _maxValue;
+        _lockImage.sprite = Locked ? _lockSprite : _unlockSprite;
     }
 
     private void OnDestroy ()
@@ -56,7 +63,7 @@ public class InputWithSlider : MonoBehaviour
 
     public void SetValue (float value)
     {
-        _inputField?.SetTextWithoutNotify(value.ToString("0.###").Replace(",", "."));
+        _inputField?.SetTextWithoutNotify(value.ToString("0.##").Replace(",", "."));
         _slider?.SetValueWithoutNotify(value);
         CurrentValue = value;
     }
@@ -82,6 +89,13 @@ public class InputWithSlider : MonoBehaviour
         {
             OnValueChanged(CurrentValue);
         }
+    }
+
+    private void OnLockButtonClicked ()
+    {
+        Locked = !Locked;
+        _lockImage.sprite = Locked ? _lockSprite : _unlockSprite;
+        _lockButton.image.color = Locked ? Color.cyan : Color.white;
     }
 
     private void OnValueChanged(float value)
