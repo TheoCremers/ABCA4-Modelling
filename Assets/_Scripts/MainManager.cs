@@ -14,10 +14,12 @@ public class MainManager : MonoBehaviour
     public InputWithSlider InputC;
     public InputWithSlider InputD;
     public InputWithSlider InputT;
-    public InputWithSlider InputPx;
+    public InputWithSlider InputM;
 
-    private List<ACSolution> _solutions = new List<ACSolution>();
-    private ACSolution _avgSolution = new ACSolution(0f, 0f);
+    private List<ABCDSolution> _solutions = new List<ABCDSolution>();
+    private ABCDSolution _avgSolution = new ABCDSolution(0f, 0f, 0f, 0f);
+    const float DELTA = 0.01f;
+    const float LIMIT = 100000000;
 
     private void Awake ()
     {
@@ -26,82 +28,138 @@ public class MainManager : MonoBehaviour
         RuleScript.inputC = InputC;
         RuleScript.inputD = InputD;
         RuleScript.inputT = InputT;
-        RuleScript.inputPx = InputPx;
+        RuleScript.inputM = InputM;
 
         Screen.fullScreen = true;
     }
 
-    public void AdjustACD ()
+    public void AdjustABCD ()
     {
         float T = InputT.CurrentValue;
-        float Px = InputPx.CurrentValue;
-        float iPx = (1f - Px);
-        float invPx = 1f / Px;
+        float M = InputM.CurrentValue;
 
-        float avgA = 0f;
-        float avgC = 0f;
+        double avgA = 0f;
+        double avgB = 0f;
+        double avgC = 0f;
+        double avgD = 0f;
+        float minA = -1f;
+        float minB = float.MaxValue;
+        float minC = float.MaxValue;
+        float minD = float.MaxValue;
+        float maxA = float.MinValue;
+        float maxB = float.MinValue;
+        float maxC = float.MinValue;
+        float maxD = float.MinValue;
         _solutions.Clear();
 
-        for (float A = T; A > 0f; A -= 0.001f)
+        int solutions = 0;
+        float A = -DELTA;
+        while (solutions < LIMIT)
         {
-            for (float C = A; A + C < 2f * T; C += 0.001f)
-            {
-                float D = (2f * T - 0.5f * A - iPx * C) * invPx;
-                float B = 0.25f * (A + D);
+            A += DELTA;
+            // check rules for max A
+            if (2f * A >= T || 2f * A * M >= T) { break; }
 
-                if (A < B && B < C && C < D && D < 1f && B < T && (A + C) < 2f * T)
+            float localMinB = -1f;
+            float localMaxB = float.MinValue;
+            float B = A - DELTA;
+            while (true)
+            {
+                B += DELTA;
+                // check rules for max B
+                if (2f * B >= T || A + B >= T || (A + B) * M >= T) { break; }
+
+                float localMinC = -1f;
+                float localMaxC = float.MinValue;
+                float C = B - DELTA;
+                while (true)
                 {
-                    _solutions.Add(new ACSolution(A, C));
-                    avgA += A;
-                    avgC += C;
+                    C += DELTA;
+                    // check rules for max C
+                    if (A + C >= T || (A + C) * M >= T) { break; }
+
+                    // check rules for min C
+                    if (2f * C < T) { continue; }
+
+                    float localMinD = -1f;
+                    float localMaxD = float.MinValue;
+                    float D = C - DELTA;
+                    while(true)
+                    {
+                        D += DELTA;
+                        // check rules for max D
+                        if ((A + D) * M >= T) { break; }
+
+                        // check rules for min D
+                        if (A + D < T) { continue; }
+
+                        // solution found!
+                        _solutions.Add(new ABCDSolution(A, B, C, D));
+
+                        avgA += A;
+                        avgB += B;
+                        avgC += C;
+                        avgD += D;
+
+                        if (minA < 0f) { minA = A; }
+                        maxA = A;
+
+                        if (localMinB < 0f) { localMinB = B; }
+                        localMaxB = B;
+
+                        if (localMinC < 0f) { localMinC = C; }
+                        localMaxC = C;
+
+                        if (localMinD < 0f) { localMinD = D; }
+                        localMaxD = D;
+
+
+                        solutions++;
+                    }
+                    if (localMinD >= 0f && localMinD < minD) {  minD = localMinD; }
+                    if (localMaxD > maxD) {  maxD = localMaxD; }
                 }
+                if (localMinC >= 0f && localMinC < minC) { minC = localMinC; }
+                if (localMaxC > maxC) { maxC = localMaxC; }
             }
+            if (localMinB >= 0f && localMinB < minB) { minB = localMinB; }
+            if (localMaxB > maxB) { maxB = localMaxB; }
         }
 
         if (_solutions.Count > 0)
         {
-            avgA /= (float)_solutions.Count;
-            avgC /= (float)_solutions.Count;
-            _avgSolution = new ACSolution(avgA, avgC);
+            avgA /= (float) solutions;
+            avgB /= (float) solutions;
+            avgC /= (float) solutions;
+            avgD /= (float) solutions;
+            _avgSolution = new ABCDSolution((float) avgA, (float) avgB, (float) avgC, (float) avgD);
+            InputA.SetSolutionBounds(minA, maxA);
+            InputB.SetSolutionBounds(minB, maxB);
+            InputC.SetSolutionBounds(minC, maxC);
+            InputD.SetSolutionBounds(minD, maxD);
+            Debug.Log($"A: {minA}-{maxA}  B: {minB}-{maxB}  C: {minC}-{maxC}  D: {minD}-{maxD}");
         }
 
-        _solutionDisplay.text = $"{_solutions.Count} solution(s) found!";
+        _solutionDisplay.text = $"{solutions} solution(s) found!";
     }
 
     public void ShowRandomACSolution ()
     {
         if (_solutions.Count == 0) return;
-        float T = InputT.CurrentValue;
-        float Px = InputPx.CurrentValue;
-        float iPx = (1f - Px);
-        float invPx = 1f / Px;
-
-        ACSolution sol = _solutions[Random.Range(0, _solutions.Count)];
-        float D = (2f * T - 0.5f * sol.A - iPx * sol.C) * invPx;
-        float B = 0.25f * (sol.A + D);
-
+        ABCDSolution sol = _solutions[Random.Range(0, _solutions.Count)];
         InputA.SetValue(sol.A);
-        InputB.SetValue(B);
+        InputB.SetValue(sol.B);
         InputC.SetValue(sol.C);
-        InputD.SetValue(D);
+        InputD.SetValue(sol.D);
     }
 
     public void ShowAverageACSolution ()
     {
         if (_solutions.Count == 0) return;
-        float T = InputT.CurrentValue;
-        float Px = InputPx.CurrentValue;
-        float iPx = (1f - Px);
-        float invPx = 1f / Px;
-
-        ACSolution sol = _avgSolution;
-        float D = (2f * T - 0.5f * sol.A - iPx * sol.C) * invPx;
-        float B = 0.25f * (sol.A + D);
-
-        InputA.SetValue(sol.A);
-        InputB.SetValue(B);
-        InputC.SetValue(sol.C);
-        InputD.SetValue(D);
+        InputA.SetValue(_avgSolution.A);
+        InputB.SetValue(_avgSolution.B);
+        InputC.SetValue(_avgSolution.C);
+        InputD.SetValue(_avgSolution.D);
     }
 
     public void Exit ()
@@ -114,16 +172,16 @@ public class MainManager : MonoBehaviour
     }
 }
 
-public struct ACSolution{
+public struct ABCDSolution{
     public float A;
-    //public float B;
+    public float B;
     public float C;
-    //public float D;
-    public ACSolution(float a, /*float b,*/ float c/*, float d*/)
+    public float D;
+    public ABCDSolution(float a, float b, float c, float d)
     {
         A = a;
-        //B = b;
+        B = b;
         C = c;
-        //D = d;
+        D = d;
     }
 }

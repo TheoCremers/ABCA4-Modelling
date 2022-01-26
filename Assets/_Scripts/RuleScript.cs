@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class RuleScript : MonoBehaviour
 {
-    [SerializeField] private RuleSelection _rule = RuleSelection.Order;
+    [SerializeField] private int _rule = 0;
     [SerializeField] private Image _stateImage = null;
 
     public static InputWithSlider inputA = null;
@@ -13,57 +13,96 @@ public class RuleScript : MonoBehaviour
     public static InputWithSlider inputC = null;
     public static InputWithSlider inputD = null;
     public static InputWithSlider inputT = null;
-    public static InputWithSlider inputPx = null;
+    //public static InputWithSlider inputPx = null;
+    public static InputWithSlider inputM = null;
 
     private void Update ()
     {
         switch (_rule)
         {
-            case RuleSelection.Order:
-                _stateImage.color = RuleOrder() ? Color.green : Color.red;
+            case 1:
+                _stateImage.color = RuleOne() ? Color.green : Color.red;
                 break;
-            case RuleSelection.BT:
-                _stateImage.color = RuleBT() ? Color.green : Color.red;
+            case 2:
+                _stateImage.color = RuleTwo() ? Color.green : Color.red;
                 break;
-            case RuleSelection.AC:
-                _stateImage.color = RuleAC() ? Color.green : Color.red;
+            case 3:
+                _stateImage.color = RuleThree() ? Color.green : Color.red;
                 break;
-            case RuleSelection.B:
-                _stateImage.color = RuleB() ? Color.green : Color.red;
+            case 4:
+                _stateImage.color = RuleFour() ? Color.green : Color.red;
                 break;
-            case RuleSelection.Px:
-                _stateImage.color = RulePx() ? Color.green : Color.red;
+            case 5:
+                _stateImage.color = RuleFive() ? Color.green : Color.red;
+                break;
+            case 6:
+                _stateImage.color = RuleSix() ? Color.green : Color.red;
+                break;
+            default:
                 break;
         }
     }
 
-    private bool RuleOrder ()
+    private bool RuleOne ()
     {
-        return (inputA.CurrentValue < inputB.CurrentValue) &&
-               (inputB.CurrentValue < inputC.CurrentValue) &&
-               (inputC.CurrentValue < inputD.CurrentValue);
+        return (inputA.CurrentValue <= inputB.CurrentValue) &&
+               (inputB.CurrentValue <= inputC.CurrentValue) &&
+               (inputC.CurrentValue <= inputD.CurrentValue);
     }
 
-    private bool RuleBT ()
+    private bool RuleTwo ()
     {
-        return (inputB.CurrentValue < inputT.CurrentValue);
+        return 2f * inputB.CurrentValue < inputT.CurrentValue;
     }
 
-    private bool RuleAC ()
+    private bool RuleThree ()
     {
-        return (inputA.CurrentValue + inputC.CurrentValue < 2f * inputT.CurrentValue);
+        return inputA.CurrentValue + inputC.CurrentValue < inputT.CurrentValue;
     }
 
-    private bool RuleB ()
+    private bool RuleFour ()
     {
-        return Mathf.Approximately(inputB.CurrentValue,
-            0.25f * (inputA.CurrentValue + inputD.CurrentValue));
+        return (inputA.CurrentValue + inputD.CurrentValue) * inputM.CurrentValue < inputT.CurrentValue;
     }
 
-    private bool RulePx ()
+    private bool RuleFive ()
     {
-        return Mathf.Approximately(0.5f * inputA.CurrentValue + (1f - inputPx.CurrentValue) * inputC.CurrentValue + inputPx.CurrentValue * inputD.CurrentValue, 2f * inputT.CurrentValue);
+        return 2f * inputC.CurrentValue >= inputT.CurrentValue;
     }
+
+    private bool RuleSix ()
+    {
+        return inputA.CurrentValue + inputD.CurrentValue >= inputT.CurrentValue;
+    }
+
+    #region oldrules
+    //private bool RuleOrder ()
+    //{
+    //    return (inputA.CurrentValue < inputB.CurrentValue) &&
+    //           (inputB.CurrentValue < inputC.CurrentValue) &&
+    //           (inputC.CurrentValue < inputD.CurrentValue);
+    //}
+    //private bool RuleBT ()
+    //{
+    //    return (inputB.CurrentValue < inputT.CurrentValue);
+    //}
+
+    //private bool RuleAC ()
+    //{
+    //    return (inputA.CurrentValue + inputC.CurrentValue < 2f * inputT.CurrentValue);
+    //}
+
+    //private bool RuleB ()
+    //{
+    //    return Mathf.Approximately(inputB.CurrentValue,
+    //        0.25f * (inputA.CurrentValue + inputD.CurrentValue));
+    //}
+
+    //private bool RulePx ()
+    //{
+    //    return Mathf.Approximately(0.5f * inputA.CurrentValue + (1f - inputPx.CurrentValue) * inputC.CurrentValue + inputPx.CurrentValue * inputD.CurrentValue, 2f * inputT.CurrentValue);
+    //}
+    #endregion
 }
 
 public enum RuleSelection

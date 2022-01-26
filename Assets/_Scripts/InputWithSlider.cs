@@ -45,6 +45,12 @@ public class InputWithSlider : MonoBehaviour
         if (_slider != null)
         {
             SetValue(CurrentValue);
+            _slider.minValue = _minValue;
+            _slider.maxValue = _maxValue;
+            _minSlider.minValue = _minValue;
+            _minSlider.maxValue = _maxValue;
+            _maxSlider.minValue = _minValue;
+            _maxSlider.maxValue = _maxValue;
         }
     }
 
@@ -60,7 +66,7 @@ public class InputWithSlider : MonoBehaviour
         _minSolution = min;
         _maxSolution = max;
         _minSlider.SetValueWithoutNotify(min);
-        _maxSlider.SetValueWithoutNotify(max);
+        _maxSlider.SetValueWithoutNotify(_maxValue - max);
     }
 
     private void OnInputValueChanged (string stringValue)
