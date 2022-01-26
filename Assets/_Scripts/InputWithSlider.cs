@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+[ExecuteInEditMode]
 public class InputWithSlider : MonoBehaviour
 {
     [SerializeField] private TMP_InputField _inputField = null;
@@ -20,6 +21,8 @@ public class InputWithSlider : MonoBehaviour
         _inputField.onDeselect.AddListener(OnInputValueChanged);
         _slider.onValueChanged.AddListener(OnValueChanged);
         SetValue(CurrentValue);
+        _slider.minValue = _minValue;
+        _slider.maxValue = _maxValue;
     }
 
     private void OnDestroy ()
@@ -27,6 +30,14 @@ public class InputWithSlider : MonoBehaviour
         _inputField.onSubmit.RemoveListener(OnInputValueChanged);
         _inputField.onDeselect.RemoveListener(OnInputValueChanged);
         _slider.onValueChanged.RemoveListener(OnValueChanged);
+    }
+
+    private void OnValidate ()
+    {
+        if (_slider != null)
+        {
+            SetValue(CurrentValue);
+        }
     }
 
     private void OnInputValueChanged (string stringValue)
@@ -51,8 +62,8 @@ public class InputWithSlider : MonoBehaviour
 
     public void SetValue (float value)
     {
-        _inputField.SetTextWithoutNotify(value.ToString("0.###").Replace(",","."));
-        _slider.SetValueWithoutNotify(value);
+        _inputField?.SetTextWithoutNotify(value.ToString("0.###").Replace(",","."));
+        _slider?.SetValueWithoutNotify(value);
         CurrentValue = value;
     }
 
