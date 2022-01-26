@@ -9,11 +9,15 @@ public class InputWithSlider : MonoBehaviour
 {
     [SerializeField] private TMP_InputField _inputField = null;
     [SerializeField] private Slider _slider = null;
+    [SerializeField] private Slider _minSlider = null;
+    [SerializeField] private Slider _maxSlider = null;
     [SerializeField] private float _minValue = 0f;
     [SerializeField] private float _maxValue = 0f;
 
     [field:SerializeField]
     public float CurrentValue { get; private set; }
+    private float _minSolution = 0f;
+    private float _maxSolution = 0f;
 
     void Start ()
     {
@@ -23,6 +27,10 @@ public class InputWithSlider : MonoBehaviour
         SetValue(CurrentValue);
         _slider.minValue = _minValue;
         _slider.maxValue = _maxValue;
+        _minSlider.minValue = _minValue;
+        _minSlider.maxValue = _maxValue;
+        _maxSlider.minValue = _minValue;
+        _maxSlider.maxValue = _maxValue;
     }
 
     private void OnDestroy ()
@@ -38,6 +46,21 @@ public class InputWithSlider : MonoBehaviour
         {
             SetValue(CurrentValue);
         }
+    }
+
+    public void SetValue (float value)
+    {
+        _inputField?.SetTextWithoutNotify(value.ToString("0.###").Replace(",", "."));
+        _slider?.SetValueWithoutNotify(value);
+        CurrentValue = value;
+    }
+
+    public void SetSolutionBounds (float min, float max)
+    {
+        _minSolution = min;
+        _maxSolution = max;
+        _minSlider.SetValueWithoutNotify(min);
+        _maxSlider.SetValueWithoutNotify(max);
     }
 
     private void OnInputValueChanged (string stringValue)
@@ -60,15 +83,9 @@ public class InputWithSlider : MonoBehaviour
         SetValue(value);
     }
 
-    public void SetValue (float value)
-    {
-        _inputField?.SetTextWithoutNotify(value.ToString("0.###").Replace(",","."));
-        _slider?.SetValueWithoutNotify(value);
-        CurrentValue = value;
-    }
-
     private bool CheckLimits (float value)
     {
         return (value > _minValue && value < _maxValue);
     }
+
 }

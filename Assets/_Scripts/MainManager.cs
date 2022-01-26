@@ -116,10 +116,14 @@ public class MainManager : MonoBehaviour
 
 public struct ACSolution{
     public float A;
+    //public float B;
     public float C;
-    public ACSolution(float a, float c)
+    //public float D;
+    public ACSolution(float a, /*float b,*/ float c/*, float d*/)
     {
         A = a;
+        //B = b;
         C = c;
+        //D = d;
     }
 }
