@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class MainManager : MonoBehaviour
@@ -8,6 +9,7 @@ public class MainManager : MonoBehaviour
     //public static MainManager Instance;
 
     [SerializeField] private TextMeshProUGUI _solutionDisplay = null;
+    [SerializeField] private Toggle _autoGenerateUI = null;
 
     public InputWithSlider InputA;
     public InputWithSlider InputB;
@@ -31,6 +33,31 @@ public class MainManager : MonoBehaviour
         RuleScript.inputM = InputM;
 
         Screen.fullScreen = true;
+
+        InputM.OnValueChanged += v => OnControlVariablesChanged();
+        InputT.OnValueChanged += v => OnControlVariablesChanged();
+    }
+
+    private void OnDestroy ()
+    {
+        InputM.OnValueChanged -= v => OnControlVariablesChanged();
+        InputT.OnValueChanged -= v => OnControlVariablesChanged();
+    }
+
+    public void OnControlVariablesChanged ()
+    {
+        if (_autoGenerateUI.isOn) 
+        {
+            AdjustABCD();
+        }
+        else
+        {
+            _solutions.Clear();
+            InputA.SetSolutionBounds();
+            InputB.SetSolutionBounds();
+            InputC.SetSolutionBounds();
+            InputD.SetSolutionBounds();
+        }
     }
 
     public void AdjustABCD ()
@@ -159,7 +186,7 @@ public class MainManager : MonoBehaviour
             InputB.SetSolutionBounds(minB, maxB);
             InputC.SetSolutionBounds(minC, maxC);
             InputD.SetSolutionBounds(minD, maxD);
-            Debug.Log($"A: {minA}-{maxA}  B: {minB}-{maxB}  C: {minC}-{maxC}  D: {minD}-{maxD}");
+            //Debug.Log($"A: {minA}-{maxA}  B: {minB}-{maxB}  C: {minC}-{maxC}  D: {minD}-{maxD}");
 
             ShowAverageSolution();
         }

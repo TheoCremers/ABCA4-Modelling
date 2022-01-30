@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 [ExecuteInEditMode]
 public class InputWithSlider : MonoBehaviour
@@ -21,6 +22,8 @@ public class InputWithSlider : MonoBehaviour
     [field:SerializeField]
     public float CurrentValue { get; private set; }
     public bool Locked { get; private set; }
+    public event Action<float> OnValueChanged;
+
     private float _minSolution = 0f;
     private float _maxSolution = 0f;
 
@@ -28,7 +31,7 @@ public class InputWithSlider : MonoBehaviour
     {
         _inputField.onSubmit.AddListener(OnInputValueChanged);
         _inputField.onDeselect.AddListener(OnInputValueChanged);
-        _slider.onValueChanged.AddListener(OnValueChanged);
+        _slider.onValueChanged.AddListener(OnInputValueChanged);
         _lockButton.onClick.AddListener(OnLockButtonClicked);
         SetValue(CurrentValue);
         _slider.minValue = _minValue;
@@ -44,7 +47,7 @@ public class InputWithSlider : MonoBehaviour
     {
         _inputField.onSubmit.RemoveListener(OnInputValueChanged);
         _inputField.onDeselect.RemoveListener(OnInputValueChanged);
-        _slider.onValueChanged.RemoveListener(OnValueChanged);
+        _slider.onValueChanged.RemoveListener(OnInputValueChanged);
     }
 
     private void OnValidate ()
@@ -68,10 +71,10 @@ public class InputWithSlider : MonoBehaviour
         CurrentValue = value;
     }
 
-    public void SetSolutionBounds (float min, float max)
+    public void SetSolutionBounds (float min = float.MinValue, float max = float.MaxValue)
     {
-        _minSolution = min;
-        _maxSolution = max;
+        _minSolution = Mathf.Max(min, _minValue);
+        _maxSolution = Mathf.Min(max, _maxValue);
         _minSlider.SetValueWithoutNotify(min);
         _maxSlider.SetValueWithoutNotify(_maxValue - max);
     }
@@ -82,12 +85,12 @@ public class InputWithSlider : MonoBehaviour
         {
             if (CheckLimits(value))
             {
-                OnValueChanged(value);
+                OnInputValueChanged(value);
             }
         }
         else
         {
-            OnValueChanged(CurrentValue);
+            OnInputValueChanged(CurrentValue);
         }
     }
 
@@ -96,10 +99,13 @@ public class InputWithSlider : MonoBehaviour
         Locked = !Locked;
         _lockImage.sprite = Locked ? _lockSprite : _unlockSprite;
         _lockButton.image.color = Locked ? Color.cyan : Color.white;
+        _slider.interactable = !Locked;
+        _inputField.interactable = !Locked;
     }
 
-    private void OnValueChanged(float value)
+    private void OnInputValueChanged(float value)
     {
+        OnValueChanged?.Invoke(value);
         SetValue(value);
     }
 
